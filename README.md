@@ -1,2 +1,3 @@
-# sbf
-Sociedade Brasileira de Ferromodelismo
+# painel-sbf
+
+Projetos para ferromodelismo
