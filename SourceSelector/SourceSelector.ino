@@ -55,6 +55,41 @@ const int EXTERNAL_BUTTON = 3;
 const int EXTERNAL_LED = 2;
 const int EXTERNAL_RELAY = A0;  // pins 0, 1 are used as RX, TX
 
+void set_led(int pin, bool state);
+void set_relay(int pin, bool state);
+
+void setup() {
+  pinMode(MAIN_JUMPER, INPUT_PULLUP);
+
+  // track controls
+  pinMode(TRACK_BUTTON, INPUT_PULLUP);
+  pinMode(TRACK_LED, OUTPUT);
+  pinMode(TRACK_RELAY, OUTPUT);
+  set_led(TRACK_LED, false);
+  set_relay(TRACK_RELAY, false);
+
+  // DCC source controls
+  pinMode(DCC_BUTTON, INPUT_PULLUP);
+  pinMode(DCC_LED, OUTPUT);
+  pinMode(DCC_RELAY, OUTPUT);
+  set_led(DCC_LED, true);
+  set_relay(DCC_RELAY, false);
+
+  // analog source controls
+  pinMode(ANALOG_BUTTON, INPUT_PULLUP);
+  pinMode(ANALOG_LED, OUTPUT);
+  pinMode(ANALOG_RELAY, OUTPUT);
+  set_led(ANALOG_LED, true);
+  set_relay(ANALOG_RELAY, false);
+
+  // external source controls
+  pinMode(EXTERNAL_BUTTON, INPUT_PULLUP);
+  pinMode(EXTERNAL_LED, OUTPUT);
+  pinMode(EXTERNAL_RELAY, OUTPUT);
+  set_led(EXTERNAL_LED, true);
+  set_relay(EXTERNAL_RELAY, false);
+}
+
 void set_led(int pin, bool state) {
   // For leds with cathode connected to pin
   // state = true -> led ON
@@ -92,8 +127,8 @@ enum Source {
   DCC_SOURCE = 3
 };
 
-
 void disable_panel() {
+  // turn off all leds and relays
   int i;
   for (i = 0; i < LEN_RELAYS; i++) {
     digitalWrite(RELAYS[i], HIGH); 
@@ -104,6 +139,8 @@ void disable_panel() {
 }
 
 void exclusive_on(int source) {
+  // turns on source led and relay
+  // and turns off other sources and relays
   int i;
   for (i = 0; i < LEN_LEDS; i++) {
     if (i == source) {
@@ -116,53 +153,6 @@ void exclusive_on(int source) {
   }  
 }
 
-
-void setup() {
-  pinMode(MAIN_JUMPER, INPUT_PULLUP);
-
-  // track controls
-  pinMode(TRACK_LED, OUTPUT);
-  set_led(TRACK_LED, false);
-  pinMode(TRACK_BUTTON, INPUT_PULLUP);
-  pinMode(TRACK_RELAY, OUTPUT);
-  digitalWrite(TRACK_RELAY, LOW);
-
-  // DCC source controls
-  pinMode(DCC_LED, OUTPUT);
-  set_led(DCC_LED, true);
-  pinMode(DCC_BUTTON, INPUT_PULLUP);
-  pinMode(DCC_RELAY, OUTPUT);
-  digitalWrite(DCC_RELAY, LOW);
-
-  // analog source controls
-  pinMode(ANALOG_LED, OUTPUT);
-  set_led(ANALOG_LED, true);
-  pinMode(ANALOG_BUTTON, INPUT_PULLUP);
-  pinMode(ANALOG_RELAY, OUTPUT);
-  digitalWrite(ANALOG_RELAY, LOW);
-
-  // external source controls
-  pinMode(EXTERNAL_LED, OUTPUT);
-  set_led(EXTERNAL_LED, true);
-  pinMode(EXTERNAL_BUTTON, INPUT_PULLUP);
-  pinMode(EXTERNAL_RELAY, OUTPUT);
-  digitalWrite(EXTERNAL_RELAY, LOW);
-}
-
-void blink_source_leds() {
-  int i;
-  for (;;) {
-    for (i = 1; i < LEN_LEDS; i++) {
-      set_led(LEDS[i], true); 
-    }
-    delay(ONE_SECOND / 2);
-    for (i = 1; i < LEN_LEDS; i++) {
-      set_led(LEDS[i], false); 
-    }
-    delay(ONE_SECOND / 2);
-  }
-}
-
 void set_track(bool state) {
   set_led(TRACK_LED, state);
   set_relay(TRACK_RELAY, state);
@@ -171,7 +161,7 @@ void set_track(bool state) {
 int previous_held_button = -1;
 unsigned long hold_started = 0;
 
-int selection_button() {
+int source_button() {
   // Returns pin of button held for more than HOLD_DURATION.
   // If more than one button is held, only first pin is reported.
   // Returns -1 if no button was held long enough
@@ -202,6 +192,31 @@ int selection_button() {
   return -1;
 }
 
+
+const int SOURCE_LEDS[] = {EXTERNAL_LED, ANALOG_LED, DCC_LED};
+const int LEN_SOURCE_LEDS = sizeof(LEDS) / sizeof(LEDS[0]);
+bool _source_leds_state = false;
+
+bool toggle_source_leds() {
+  _source_leds_state = !_source_leds_state;
+  int i;
+  for (i = 0; i < LEN_SOURCE_LEDS; i++) {
+    set_led(SOURCE_LEDS[i], _source_leds_state);
+  }
+  return _source_leds_state;
+}   
+
+unsigned long _previous_toggle_time = 0;
+
+void blink_source_leds(unsigned long interval) {
+
+  if ((millis() - _previous_toggle_time) >= interval) {
+    _previous_toggle_time = millis();  // restart timer
+    toggle_source_leds();
+  }
+
+}
+
 enum Source selected_source = NO_SOURCE;
 
 void loop() {
@@ -210,7 +225,7 @@ void loop() {
   if (switch_closed(MAIN_JUMPER)) {
     switch (selected_source) {
       case NO_SOURCE:
-        test_selection_button();
+        blink_source_leds(ONE_SECOND);
         break;
       case EXTERNAL_SOURCE:
         exclusive_on(EXTERNAL_SOURCE);
@@ -232,8 +247,8 @@ void loop() {
 
 // functions for manual testing
 
-void test_selection_button() {
-  int selected = selection_button();
+void test_source_button() {
+  int selected = source_button();
   if (selected == -1) return;
   switch (selected) {
     case EXTERNAL_BUTTON:
