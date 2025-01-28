@@ -12,6 +12,7 @@ Coding conventions:
 - UPPER_CASE for constants;
 - camelCase for variables or functions defined by Arduino;
 - snake_case for variables or functions defined by us;
+- CamelCase for names of classes defined by us;
 
 */
 

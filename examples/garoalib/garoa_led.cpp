@@ -2,55 +2,59 @@
 #include "garoa_led.h"
 
 Led::Led(int pin, int signal_on) {
-  this->pin = pin;
-  this->signal_on = signal_on;
-  signal_off = signal_on == HIGH ? LOW : HIGH;
-  lit = false;
-  blinking = false;
-  blink_count = 0;
-  blink_start_time = 0;
-  blink_duration = 0;
+  _pin = pin;
+  _signal_on = signal_on;
+  _signal_off = signal_on == HIGH ? LOW : HIGH;
+  _lit = false;
+  _blinking = false;
+  _blink_count = 0;
+  _blink_start_time = 0;
+  _blink_duration = 0;
 
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, signal_off);
+  pinMode(_pin, OUTPUT);
+  digitalWrite(_pin, _signal_off);
+}
+
+bool Led::lit() {
+  return _lit;
 }
 
 void Led::on() {
-  digitalWrite(pin, signal_on);
-  lit = true;
+  digitalWrite(_pin, _signal_on);
+  _lit = true;
 }
  
 void Led::off() {
-  digitalWrite(pin, signal_off);
-  lit = false;
+  digitalWrite(_pin, _signal_off);
+  _lit = false;
 }
 
 bool Led::toggle() {
-  if (lit) off();
+  if (_lit) off();
   else on();
-  return lit;
+  return _lit;
 }
 
 void Led::start_blinking(unsigned long blink_duration) {
-  this->blink_duration = blink_duration;
-  blinking = true;
-  blink_count = 0;
-  blink_start_time = millis();
+  _blink_duration = blink_duration;
+  _blinking = true;
+  _blink_count = 0;
+  _blink_start_time = millis();
 }
 
 int Led::update() {
   // update state of blinking led and
   // return blink_count
-  if (!blinking) return 0;
-  if ((millis() - blink_start_time) >= blink_duration) {
-    blink_start_time = millis();
+  if (!_blinking) return 0;
+  if ((millis() - _blink_start_time) >= _blink_duration) {
+    _blink_start_time = millis();
     toggle();
-    if (lit) blink_count++;
+    if (_lit) _blink_count++;
   }
-  return blink_count;
+  return _blink_count;
 }
 
 void Led::stop_blinking() {
-  blinking = false;
+  _blinking = false;
   off();
 }
