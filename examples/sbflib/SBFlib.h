@@ -8,15 +8,15 @@ class Led {
     void off();
     bool toggle();
     void start_blinking(unsigned long cycle_duration);
-    void update();
+    int update();
     void stop_blinking();
   private:
     int pin;
     bool lit;
     int signal_on;
     int signal_off;
-    int blink_count;
     bool blinking;
+    int blink_count;
     unsigned long blink_start_time;
     unsigned long blink_duration;
 };
