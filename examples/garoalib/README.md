@@ -1,4 +1,8 @@
-#include "sbflib.h"
+
+
+## Led usage example
+
+```cpp
 
 Led led(13, HIGH);
 
@@ -17,3 +21,5 @@ void loop() {
   int count = led.update();
   if (count == 4) led.stop_blinking();
 }
+
+```

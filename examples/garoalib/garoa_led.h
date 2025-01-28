@@ -1,5 +1,5 @@
-#ifndef ledlib_h
-#define ledlib_h
+#ifndef garoaled_h
+#define garoaled_h
 
 class Led {
   public:
@@ -20,5 +20,6 @@ class Led {
     unsigned long blink_start_time;
     unsigned long blink_duration;
 };
+
 
 #endif
