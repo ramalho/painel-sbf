@@ -8,7 +8,8 @@ Código para um painel de controle de fontes para a SBF, Associação Brasileira
 
 <img src="panel-states.png" width="400"/>
 
-Nota: Além dos controles visíveis, o painel tem um jumper interno de manutenção que precisa estar conectado a GND para habilitar o painel.
+Nota: Além dos controles visíveis,
+o painel tem um jumper interno de manutenção que precisa estar conectado a GND para habilitar o painel.
 Quando este jumper é desconectado, todos os leds e relés são desligados
 e os botões não têm efeito.
 
@@ -55,17 +56,17 @@ e os botões não têm efeito.
   * para `analog_selected` ao pressionar `wifi_button`;
   * para `track_active` ao pressionar `track_button`;
 
-### `track_active`
+#### `track_active`
 
 * `track_led` ligado;
 * led e relé da fonte selecionada ligados (dois leds no caso de `wifi_selected`), demais desligados;
 * transições:
-  * **parada de emergência**: transição para modo `_selected` anterior ao pressioar `track_button`;
+  * **parada de emergência**: transição para modo `*_selected` anterior ao pressioar `track_button`;
   * **curto circuito**: transição para `track_protected` se o pino `sort_detected` mudar para LOW (?);
 
-### `track_protected`
+#### `track_protected`
 
 * `track_led` piscando;
 * led da fonte selecionada ligado (dois leds no caso de `wifi_selected`), demais desligados;
 * todos os relés desligados;
-* transição para `standby` se o pino `sort_detected` mudar para HIGH (?);
+* transição para modo `*_selected` anterior se o pino `sort_detected` mudar para HIGH (?);
