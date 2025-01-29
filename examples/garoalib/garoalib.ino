@@ -31,5 +31,5 @@ void loop() {
   else {    
     if (dcc_btn.is_held(5*SECOND)) dcc_led.on();
   }
-  delay(10); // ""
+  delay(10); // "Add a small debouncing delay" --Ladyada
 }
