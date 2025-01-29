@@ -2,7 +2,7 @@
 
 Código para um painel de controle de fontes para a SBF, Associação Brasileira de Ferromodelismo.
 
-<img src="sbf-painel-frente.jpg" width="200"/>
+<img src="sbf-painel-frente.jpg" width="400"/>
 
 ## Diagrama de estados do painel
 
@@ -27,7 +27,7 @@ e os botões não têm efeito.
 * `external_relay` ligado, todos os demais desligados;
 * transições:
   * para `standby` ao pressionar `external_button`;
-  * para `track active` ao pressionar `track`;
+  * para `track_active` ao pressionar `track`;
 
 #### `digital_selected`
 
@@ -35,7 +35,7 @@ e os botões não têm efeito.
 * `digital_relay` ligado, todos os demais desligados;
 * transições:
   * para `standby` ao pressionar `digital_button`;
-  * para `track active` ao pressionar `track_button`;
+  * para `track_active` ao pressionar `track_button`;
 
 #### `analog_selected`
 
@@ -55,11 +55,13 @@ e os botões não têm efeito.
   * para `analog_selected` ao pressionar `wifi_button`;
   * para `track_active` ao pressionar `track_button`;
 
-### `track active`
+### `track_active`
 
 * `track_led` ligado;
 * led e relé da fonte selecionada ligados (dois leds no caso de `wifi_selected`), demais desligados;
-* transição para `track_protected` se o pino `sort_detected` mudar para LOW (?);
+* transições:
+  * **parada de emergência**: transição para modo `_selected` anterior ao pressioar `track_button`;
+  * **curto circuito**: transição para `track_protected` se o pino `sort_detected` mudar para LOW (?);
 
 ### `track_protected`
 
