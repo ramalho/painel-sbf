@@ -15,7 +15,7 @@ enum class Mode {
 };
 
 const unsigned long SEC = 1000;  // 1s in milliseconds
-const unsigned long HOLD_DURATION = 5 * SEC;  // duration to hold button to confirm source selection
+const unsigned long HOLD_DURATION = 2 * SEC;  // duration to hold button to confirm source selection
 
 // Jumper from ground to a pin configured as INPUT_PULLUP.
 // Disconnect this jumper to disable panel for maintenance.
@@ -45,6 +45,10 @@ const int LEN_SOURCES = 3;
 static Array<OutputOnOff*,LEN_SOURCES> source_leds;
 static Array<Button*,LEN_SOURCES> source_buttons;
 
+const int LEN_ALL_RELAYS = 4;
+static Array<OutputOnOff*,LEN_ALL_RELAYS> all_relays;
+
+
 void setup() {
   pinMode(MAIN_JUMPER, INPUT_PULLUP);
 
@@ -55,21 +59,44 @@ void setup() {
   source_buttons.push_back(&external_button);
   source_buttons.push_back(&analog_button);
   source_buttons.push_back(&digital_button);
+
+  all_relays.push_back(&external_relay);
+  all_relays.push_back(&analog_relay);
+  all_relays.push_back(&digital_relay);
+  all_relays.push_back(&track_relay);
 }
 
 void configure_standby() {
-  for (OutputOnOff *led : source_leds) led->start_cycling(STANDBY_BLINK_DELAY);
+  for (auto *relay : all_relays) relay->turn_off();
+  for (auto *led : source_leds) {
+    led->turn_on();
+    led->start_cycling(STANDBY_BLINK_DELAY);
+  }
 }
 
 void configure_external_selected() {
-  for (OutputOnOff *led : source_leds) led->stop_cycling();
+  for (auto *led : source_leds) led->stop_cycling();
   external_led.turn_on();
-  track_led.turn_on();
+  external_relay.turn_on();
 }
 
+void configure_analog_selected() {
+  for (auto *led : source_leds) led->stop_cycling();
+  analog_led.turn_on();
+  analog_relay.turn_on();
+}
+
+void configure_digital_selected() {
+  for (auto *led : source_leds) led->stop_cycling();
+  digital_led.turn_on();
+  digital_relay.turn_on();
+}
+
+
 void update_controls() {
-  for (OutputOnOff *led : source_leds) led->update();
-  for (Button *button : source_buttons) button->update();
+  for (auto *led : source_leds) led->update();
+  for (auto *button : source_buttons) button->update();
+  for (auto *relay : all_relays) relay->update();
 }
 
 Mode current_mode = Mode::StandBy;
@@ -87,13 +114,35 @@ void loop() {
         configure_standby();
         previous_mode = Mode::StandBy;
       }
-      if (external_button.is_held(5 * SEC)) {
-        current_mode = Mode::ExternalSelected;
-      } 
+      if (external_button.is_held(5 * SEC)) current_mode = Mode::ExternalSelected;
+      else if (analog_button.is_held(5 * SEC)) current_mode = Mode::AnalogSelected;
+      else if (digital_button.is_held(5 * SEC)) current_mode = Mode::DigitalSelected;
+  
       break;
     }
     case Mode::ExternalSelected: {
-      configure_external_selected();
+      if (previous_mode != Mode::ExternalSelected) {
+        configure_external_selected();
+        previous_mode = Mode::ExternalSelected;
+      }
+      if (external_button.just_pressed()) current_mode = Mode::StandBy; 
+      break;
+    }  
+    case Mode::AnalogSelected: {
+      if (previous_mode != Mode::AnalogSelected) {
+        configure_analog_selected();
+        previous_mode = Mode::AnalogSelected;
+      }
+      if (analog_button.just_pressed()) current_mode = Mode::StandBy;
+ 
+      break;
+    }  
+    case Mode::DigitalSelected: {
+      if (previous_mode != Mode::DigitalSelected) {
+        configure_digital_selected();
+        previous_mode = Mode::DigitalSelected;
+      }
+      if (digital_button.just_pressed()) current_mode = Mode::StandBy;
       break;
     }  
   }
