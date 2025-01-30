@@ -62,11 +62,11 @@ e os botões não têm efeito.
 * led e relé da fonte selecionada ligados (dois leds no caso de `wifi_selected`), demais desligados;
 * transições:
   * **parada de emergência**: transição para modo `*_selected` anterior ao pressioar `track_button`;
-  * **curto circuito**: transição para `track_protected` se o pino `sort_detected` mudar para LOW (?);
+  * **curto circuito**: transição para `track_protected` se o pino `short_detected` mudar para LOW (?);
 
 #### `track_protected`
 
 * `track_led` piscando;
 * led da fonte selecionada ligado (dois leds no caso de `wifi_selected`), demais desligados;
 * todos os relés desligados;
-* transição para modo `*_selected` anterior se o pino `sort_detected` mudar para HIGH (?);
+* transição para modo `*_selected` anterior se o pino `short_detected` mudar para HIGH (?);
