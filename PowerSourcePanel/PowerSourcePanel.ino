@@ -4,14 +4,22 @@
 #include "garoa_button.h"
 
 enum class Mode {
-    StandBy,           // initial mode: source LEDs blinking, all relays off;
-    ExternalSelected,  // only external_led and external_relay on;
-    DigitalSelected,   // only digital_led and digital_relay on;
-    AnalogSelected,    // only analog_led and analog_relay on;
-    WifiSelected,      // wifi_led and analog_led on, only wifi_relay on;
-    TrackActive,       // track_led on, as well as led and relay of source selection;
-    TrackProtected,    // track_led blinking, led of source selection on, all relays off; 
-    Unset              // used only as initial value for previous_mode;
+  StandBy,           // initial mode: source LEDs blinking, all relays off;
+  ExternalSelected,  // only external_led and external_relay on;
+  DigitalSelected,   // only digital_led and digital_relay on;
+  AnalogSelected,    // only analog_led and analog_relay on;
+  WifiSelected,      // wifi_led and analog_led on, only wifi_relay on;
+  TrackActive,       // track_led on, as well as led and relay of source selection;
+  TrackProtected,    // track_led blinking, led of source selection on, all relays off; 
+  Unset              // used only as initial value for previous_mode;
+};
+
+enum class PowerSource {
+  None,
+  External,
+  Digital,
+  Analog,
+  Wifi
 };
 
 const unsigned long SEC = 1000;  // 1s in milliseconds
@@ -92,7 +100,6 @@ void configure_digital_selected() {
   digital_relay.turn_on();
 }
 
-
 void update_controls() {
   for (auto *led : source_leds) led->update();
   for (auto *button : source_buttons) button->update();
@@ -101,6 +108,7 @@ void update_controls() {
 
 Mode current_mode = Mode::StandBy;
 Mode previous_mode = Mode::Unset;
+PowerSource selected_source = PowerSource::None;
 
 void loop() {
   update_controls();
@@ -111,6 +119,7 @@ void loop() {
   switch (current_mode) {
     case Mode::StandBy: {
       if (previous_mode != Mode::StandBy) {
+        selected_source = PowerSource::None;
         configure_standby();
         previous_mode = Mode::StandBy;
       }
@@ -122,6 +131,7 @@ void loop() {
     }
     case Mode::ExternalSelected: {
       if (previous_mode != Mode::ExternalSelected) {
+        selected_source = PowerSource::External;
         configure_external_selected();
         previous_mode = Mode::ExternalSelected;
       }
@@ -130,6 +140,7 @@ void loop() {
     }  
     case Mode::AnalogSelected: {
       if (previous_mode != Mode::AnalogSelected) {
+        selected_source = PowerSource::Analog;
         configure_analog_selected();
         previous_mode = Mode::AnalogSelected;
       }
@@ -139,6 +150,7 @@ void loop() {
     }  
     case Mode::DigitalSelected: {
       if (previous_mode != Mode::DigitalSelected) {
+        selected_source = PowerSource::Digital;
         configure_digital_selected();
         previous_mode = Mode::DigitalSelected;
       }
