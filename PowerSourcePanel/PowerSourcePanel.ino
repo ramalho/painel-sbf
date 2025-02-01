@@ -56,6 +56,9 @@ static Array<Button*,LEN_SOURCES> source_buttons;
 const int LEN_ALL_RELAYS = 4;
 static Array<OutputOnOff*,LEN_ALL_RELAYS> all_relays;
 
+Mode current_mode = Mode::StandBy;
+Mode previous_mode = Mode::Unset;
+PowerSource selected_source = PowerSource::None;
 
 void setup() {
   pinMode(MAIN_JUMPER, INPUT_PULLUP);
@@ -75,6 +78,7 @@ void setup() {
 }
 
 void configure_standby() {
+  selected_source = PowerSource::None;
   for (auto *relay : all_relays) relay->turn_off();
   for (auto *led : source_leds) {
     led->turn_on();
@@ -83,82 +87,106 @@ void configure_standby() {
 }
 
 void configure_external_selected() {
+  selected_source = PowerSource::External;
   for (auto *led : source_leds) led->stop_cycling();
   external_led.turn_on();
   external_relay.turn_on();
 }
 
 void configure_analog_selected() {
+  selected_source = PowerSource::Analog;
   for (auto *led : source_leds) led->stop_cycling();
   analog_led.turn_on();
   analog_relay.turn_on();
 }
 
 void configure_digital_selected() {
+  selected_source = PowerSource::Digital;
   for (auto *led : source_leds) led->stop_cycling();
   digital_led.turn_on();
   digital_relay.turn_on();
 }
 
+void activate_track() {
+  track_led.turn_on();
+  track_relay.turn_on();
+}
+
+void deactivate_track() {
+  track_led.turn_off();
+  track_relay.turn_off();
+}
+
 void update_controls() {
   for (auto *led : source_leds) led->update();
   for (auto *button : source_buttons) button->update();
+  track_button.update();
   for (auto *relay : all_relays) relay->update();
 }
 
-Mode current_mode = Mode::StandBy;
-Mode previous_mode = Mode::Unset;
-PowerSource selected_source = PowerSource::None;
-
 void loop() {
   update_controls();
-  // if (external_button.just_pressed()) {
-  //   external_led.toggle();
-  // }
 
   switch (current_mode) {
     case Mode::StandBy: {
       if (previous_mode != Mode::StandBy) {
-        selected_source = PowerSource::None;
         configure_standby();
         previous_mode = Mode::StandBy;
       }
       if (external_button.is_held(5 * SEC)) current_mode = Mode::ExternalSelected;
       else if (analog_button.is_held(5 * SEC)) current_mode = Mode::AnalogSelected;
-      else if (digital_button.is_held(5 * SEC)) current_mode = Mode::DigitalSelected;
-  
+      else if (digital_button.is_held(5 * SEC)) current_mode = Mode::DigitalSelected;  
       break;
     }
     case Mode::ExternalSelected: {
       if (previous_mode != Mode::ExternalSelected) {
-        selected_source = PowerSource::External;
         configure_external_selected();
         previous_mode = Mode::ExternalSelected;
       }
-      if (external_button.just_pressed()) current_mode = Mode::StandBy; 
+      if (external_button.just_pressed()) current_mode = Mode::StandBy;
+      else if (track_button.just_pressed()) current_mode = Mode::TrackActive; 
       break;
     }  
     case Mode::AnalogSelected: {
       if (previous_mode != Mode::AnalogSelected) {
-        selected_source = PowerSource::Analog;
         configure_analog_selected();
         previous_mode = Mode::AnalogSelected;
       }
       if (analog_button.just_pressed()) current_mode = Mode::StandBy;
- 
+      else if (track_button.just_pressed()) current_mode = Mode::TrackActive; 
       break;
     }  
     case Mode::DigitalSelected: {
       if (previous_mode != Mode::DigitalSelected) {
-        selected_source = PowerSource::Digital;
         configure_digital_selected();
         previous_mode = Mode::DigitalSelected;
       }
       if (digital_button.just_pressed()) current_mode = Mode::StandBy;
+      else if (track_button.just_pressed()) current_mode = Mode::TrackActive; 
+      break;
+    }  
+    case Mode::TrackActive: {
+      if (previous_mode != Mode::TrackActive) {
+        activate_track();
+        previous_mode = Mode::TrackActive;
+      }
+      if (track_button.just_pressed()) {
+        deactivate_track();
+        switch (selected_source) {
+          case PowerSource::External:
+            current_mode = Mode::ExternalSelected;
+            break; 
+          case PowerSource::Analog:
+            current_mode = Mode::AnalogSelected;
+            break; 
+          case PowerSource::Digital:
+            current_mode = Mode::DigitalSelected;
+            break; 
+        }
+      }
       break;
     }  
   }
 
   delay(10);  // "Add a small debouncing delay" --@ladyada
 }
-
