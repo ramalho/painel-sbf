@@ -20,6 +20,8 @@ e os botões não têm efeito.
 * `external_led`, `digital_led`, `analog_led`, piscando;
 * `track_led` e `wifi_led` desligados;
 * todos os relés desligados;
+* transição para `wifi_selected` após segurar o `analog_button` por 5s SE
+  o `direction_button` estiver apertado no momento da transição (ao final dos 5s);
 * transição para `external_selected`, `digital_selected`, ou `analog_selected` após segurar o botão correspondente por 5s;
 
 #### `external_selected`
@@ -44,7 +46,6 @@ e os botões não têm efeito.
 * `analog_relay` ligado, todos os demais desligados;
 * transições:
   * para `standby` ao pressionar `analog_button`;
-  * para `wifi_selected` ao pressionar `wifi_button`;
   * para `track_active` ao pressionar `track_button`;
 
 #### `wifi_selected`
@@ -53,7 +54,6 @@ e os botões não têm efeito.
 * `wifi_relay` ligado, todos os demais desligados;
 * transições:
   * para `standby` ao pressionar `analog_button`;
-  * para `analog_selected` ao pressionar `wifi_button`;
   * para `track_active` ao pressionar `track_button`;
 
 #### `track_active`

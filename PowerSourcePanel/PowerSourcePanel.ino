@@ -46,7 +46,6 @@ Button external_button(3, LOW);
 OutputOnOff external_led(2, LOW);
 OutputOnOff external_relay(A0, LOW);
 
-
 const unsigned long STANDBY_BLINK_DELAY = SEC / 2;
 
 const int LEN_SOURCES = 3;
