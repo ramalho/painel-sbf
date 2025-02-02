@@ -46,6 +46,10 @@ Button external_button(3, LOW);
 OutputOnOff external_led(2, LOW);
 OutputOnOff external_relay(A0, LOW);
 
+Button wifi_button(A2, LOW);  // also used as direction reverse button
+OutputOnOff wifi_led(A1, LOW);
+OutputOnOff wifi_relay(A3, LOW);
+
 const unsigned long STANDBY_BLINK_DELAY = SEC / 2;
 
 const int LEN_SOURCES = 3;
@@ -70,15 +74,20 @@ void setup() {
   source_buttons.push_back(&analog_button);
   source_buttons.push_back(&digital_button);
 
+  all_relays.push_back(&track_relay);
   all_relays.push_back(&external_relay);
   all_relays.push_back(&analog_relay);
+  all_relays.push_back(&wifi_relay);
   all_relays.push_back(&digital_relay);
-  all_relays.push_back(&track_relay);
+}
+
+void turn_off_all_relays() {
+  for (auto *relay : all_relays) relay->turn_off();
 }
 
 void configure_standby() {
   selected_source = PowerSource::None;
-  for (auto *relay : all_relays) relay->turn_off();
+  turn_off_all_relays();
   for (auto *led : source_leds) {
     led->turn_on();
     led->start_cycling(STANDBY_BLINK_DELAY);
@@ -87,6 +96,7 @@ void configure_standby() {
 
 void configure_external_selected() {
   selected_source = PowerSource::External;
+  turn_off_all_relays();
   for (auto *led : source_leds) led->stop_cycling();
   external_led.turn_on();
   external_relay.turn_on();
@@ -94,13 +104,24 @@ void configure_external_selected() {
 
 void configure_analog_selected() {
   selected_source = PowerSource::Analog;
+  turn_off_all_relays();
   for (auto *led : source_leds) led->stop_cycling();
   analog_led.turn_on();
   analog_relay.turn_on();
 }
 
+void configure_wifi_selected() {
+  selected_source = PowerSource::Wifi;
+  turn_off_all_relays();
+  for (auto *led : source_leds) led->stop_cycling();
+  analog_led.turn_on();
+  wifi_led.turn_on();
+  wifi_relay.turn_on();
+}
+
 void configure_digital_selected() {
   selected_source = PowerSource::Digital;
+  turn_off_all_relays();
   for (auto *led : source_leds) led->stop_cycling();
   digital_led.turn_on();
   digital_relay.turn_on();
@@ -134,6 +155,7 @@ void loop() {
       }
       if (external_button.is_held(5 * SEC)) current_mode = Mode::ExternalSelected;
       else if (analog_button.is_held(5 * SEC)) current_mode = Mode::AnalogSelected;
+      else if (wifi_button.is_held(5 * SEC)) current_mode = Mode::WifiSelected;  
       else if (digital_button.is_held(5 * SEC)) current_mode = Mode::DigitalSelected;  
       break;
     }
@@ -152,6 +174,16 @@ void loop() {
         previous_mode = Mode::AnalogSelected;
       }
       if (analog_button.just_pressed()) current_mode = Mode::StandBy;
+      else if (track_button.just_pressed()) current_mode = Mode::TrackActive; 
+      break;
+    }  
+    case Mode::WifiSelected: {
+      if (previous_mode != Mode::WifiSelected) {
+        configure_wifi_selected();
+        previous_mode = Mode::WifiSelected;
+      }
+      if (analog_button.just_pressed()) current_mode = Mode::StandBy;
+      else if (wifi_button.just_pressed()) current_mode = Mode::AnalogSelected;
       else if (track_button.just_pressed()) current_mode = Mode::TrackActive; 
       break;
     }  
