@@ -24,7 +24,7 @@ enum class PowerSource {
 const unsigned long SEC = 1000;  // 1s in milliseconds
 const unsigned long SELECTION_DELAY = 3 * SEC;  // duration to hold button to confirm source selection
 const unsigned long STANDBY_BLINK_DELAY = SEC / 2;
-const unsigned long SHORT_CIRCUIT_BLINK_DELAY = SEC / 4;
+const unsigned long SHORT_CIRCUIT_BLINK_DELAY = SEC / 5;
 
 // Jumper from ground to a pin configured as INPUT_PULLUP.
 // Disconnect this jumper to disable panel for maintenance.
