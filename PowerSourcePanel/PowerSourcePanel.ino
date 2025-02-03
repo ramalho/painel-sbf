@@ -1,4 +1,3 @@
-
 #include <Array.h>
 #include "garoa_digital_io.h"
 #include "garoa_button.h"
