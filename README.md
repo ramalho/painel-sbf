@@ -20,7 +20,8 @@ e os botões não têm efeito.
 * `external_led`, `digital_led`, `analog_led`, piscando;
 * `track_led` e `wifi_led` desligados;
 * todos os relés desligados;
-* transição para `external_selected`, `digital_selected`, `analog_selected` ou `wifi_selected` após segurar o botão correspondente por 5s;
+* transições:
+  * para `external_selected`, `digital_selected`, `analog_selected` ou `wifi_selected` após segurar o botão correspondente por 5s;
 
 #### `external_selected`
 
@@ -57,7 +58,10 @@ e os botões não têm efeito.
 #### `track_active`
 
 * `track_led` ligado;
-* led e relé da fonte selecionada ligados (dois leds no caso de `wifi_selected`), demais desligados;
+* `track_relay` ligado;
+* estados mantidos:
+  * led da fonte selecionada ligado (2 leds no caso de `wifi_selected`), demais desligados;
+  * relé da fonte selecionada ligado, demais relés desligados;
 * transições:
   * **parada de emergência**: transição para estado `*_selected` anterior ao pressioar `track_button`;
   * **curto circuito**: transição para `track_protected` se o pino `short_detected` mudar para LOW;
@@ -65,6 +69,8 @@ e os botões não têm efeito.
 #### `track_protected`
 
 * `track_led` piscando;
-* led da fonte selecionada ligado (dois leds no caso de `wifi_selected`), demais desligados;
 * todos os relés desligados;
-* transição para estado `*_selected` anterior se o pino `short_detected` mudar para HIGH;
+* estados mantidos:
+  * led da fonte selecionada ligado (2 leds no caso de `wifi_selected`), demais desligados;
+* transição:
+  * **curto resolvido**: transição para estado `*_selected` anterior se o pino `short_detected` mudar para HIGH;

@@ -22,7 +22,7 @@ enum class PowerSource {
 };
 
 const unsigned long SEC = 1000;  // 1s in milliseconds
-const unsigned long SELECTION_DELAY = 3 * SEC;  // duration to hold button to confirm source selection
+const unsigned long SELECTION_DELAY = 5 * SEC;  // duration to hold button to confirm source selection
 const unsigned long STANDBY_BLINK_DELAY = SEC / 2;
 const unsigned long SHORT_CIRCUIT_BLINK_DELAY = SEC / 5;
 
@@ -30,7 +30,7 @@ const unsigned long SHORT_CIRCUIT_BLINK_DELAY = SEC / 5;
 // Disconnect this jumper to disable panel for maintenance.
 Jumper main_jumper(A5, INPUT_PULLUP);
 
-// Signal from power source: LOW means short circuit detected;
+// Signal from power source: LOW means short circuit detected.
 Jumper short_circuit(A4, INPUT_PULLUP);
 
 Button track_button(12, LOW);
