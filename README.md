@@ -17,7 +17,7 @@ e os botões não têm efeito.
 
 #### `standby`
 
-* `external_led`, `digital_led`, `analog_led`, piscando;
+* `external_led`, `digital_led`, `analog_led` piscando;
 * `track_led` e `wifi_led` desligados;
 * todos os relés desligados;
 * transições:
