@@ -1,6 +1,17 @@
 #ifndef garoa_digital_io_h
 #define garoa_digital_io_h
 
+
+class Jumper {
+  public:
+    Jumper(uint8_t pin, uint8_t pin_mode);
+    bool is_closed();
+  private:
+    uint8_t _pin;
+    uint8_t _closed_state;
+};
+
+
 class OutputOnOff {
   public:
     OutputOnOff(int pin, int signal_on);
@@ -21,5 +32,7 @@ class OutputOnOff {
     unsigned long _cycle_start_time;
     unsigned long _cycle_duration;
 };
+
+
 
 #endif

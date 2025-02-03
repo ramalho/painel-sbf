@@ -1,7 +1,8 @@
+#include "Arduino.h"
 #include "garoa_button.h"
 
 
-Button::Button(int pin, int polarity)
+Button::Button(uint8_t pin, uint8_t polarity)
   : _debouncer(pin, polarity)
 {
   _already_pressed = false;
@@ -34,4 +35,3 @@ bool Button::is_held(unsigned long int duration) {
   }
   return false;
 }
-

@@ -5,7 +5,7 @@
 
 class Button {
   public:
-    Button(int pin, int mode);
+    Button(uint8_t pin, uint8_t mode);
     void update();
     bool is_pressed();
     bool is_released();

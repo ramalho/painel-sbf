@@ -23,12 +23,16 @@ enum class PowerSource {
 };
 
 const unsigned long SEC = 1000;  // 1s in milliseconds
-const unsigned long HOLD_DURATION = 2 * SEC;  // duration to hold button to confirm source selection
+const unsigned long SELECTION_DELAY = 3 * SEC;  // duration to hold button to confirm source selection
+const unsigned long STANDBY_BLINK_DELAY = SEC / 2;
+const unsigned long SHORT_CIRCUIT_BLINK_DELAY = SEC / 4;
 
 // Jumper from ground to a pin configured as INPUT_PULLUP.
 // Disconnect this jumper to disable panel for maintenance.
-// See disable_panel() function, called from loop().
-const int MAIN_JUMPER = A5;
+Jumper main_jumper(A5, INPUT_PULLUP);
+
+// Signal from power source: LOW means short circuit detected;
+Jumper short_circuit(A4, INPUT_PULLUP);
 
 Button track_button(12, LOW);
 OutputOnOff track_led(11, LOW);
@@ -39,24 +43,23 @@ OutputOnOff digital_led(8, LOW);
 OutputOnOff digital_relay(7, LOW);
 
 Button analog_button(6, LOW);
-OutputOnOff analog_led(5, LOW);
+OutputOnOff analog_led(1, LOW);
 OutputOnOff analog_relay(4, LOW);
 
 Button external_button(3, LOW);
-OutputOnOff external_led(2, LOW);
+OutputOnOff external_led(0, LOW);
 OutputOnOff external_relay(A0, LOW);
 
-Button wifi_button(A2, LOW);  // also used as direction reverse button
-OutputOnOff wifi_led(A1, LOW);
+// wifi_button is also used as reverse direction button when AnalogSelected
+Button wifi_button(A2, LOW);  
+OutputOnOff wifi_led(2, LOW);
 OutputOnOff wifi_relay(A3, LOW);
-
-const unsigned long STANDBY_BLINK_DELAY = SEC / 2;
 
 const int LEN_SOURCES = 3;
 static Array<OutputOnOff*,LEN_SOURCES> source_leds;
 static Array<Button*,LEN_SOURCES> source_buttons;
 
-const int LEN_ALL_RELAYS = 4;
+const int LEN_ALL_RELAYS = 5;
 static Array<OutputOnOff*,LEN_ALL_RELAYS> all_relays;
 
 Mode current_mode = Mode::StandBy;
@@ -64,8 +67,6 @@ Mode previous_mode = Mode::Unset;
 PowerSource selected_source = PowerSource::None;
 
 void setup() {
-  pinMode(MAIN_JUMPER, INPUT_PULLUP);
-
   source_leds.push_back(&external_led);
   source_leds.push_back(&analog_led);
   source_leds.push_back(&digital_led);
@@ -92,6 +93,7 @@ void configure_standby() {
     led->turn_on();
     led->start_cycling(STANDBY_BLINK_DELAY);
   }
+  wifi_led.turn_off();
 }
 
 void configure_external_selected() {
@@ -139,24 +141,51 @@ void deactivate_track() {
 
 void update_controls() {
   for (auto *led : source_leds) led->update();
+  track_led.update();
   for (auto *button : source_buttons) button->update();
+  wifi_button.update();
   track_button.update();
   for (auto *relay : all_relays) relay->update();
 }
 
-void loop() {
-  update_controls();
+bool panel_enabled() {
+  if (main_jumper.is_closed()) return true;
+  else {
+    turn_off_all_relays();
+    for (auto *led : source_leds) led->turn_off();
+    track_led.turn_off();
+    wifi_led.turn_off();
+  }
+  return false;
+}
 
+Mode restore_previous_mode(PowerSource selected_source) {
+  switch (selected_source) {
+    case PowerSource::External:
+      return Mode::ExternalSelected;
+    case PowerSource::Analog:
+      return Mode::AnalogSelected;
+    case PowerSource::Wifi:
+      return Mode::WifiSelected;
+    case PowerSource::Digital:
+      return Mode::DigitalSelected;
+  }
+}
+
+void loop() {
+  if (! panel_enabled()) return;
+
+  update_controls();
   switch (current_mode) {
     case Mode::StandBy: {
       if (previous_mode != Mode::StandBy) {
         configure_standby();
         previous_mode = Mode::StandBy;
       }
-      if (external_button.is_held(5 * SEC)) current_mode = Mode::ExternalSelected;
-      else if (analog_button.is_held(5 * SEC)) current_mode = Mode::AnalogSelected;
-      else if (wifi_button.is_held(5 * SEC)) current_mode = Mode::WifiSelected;  
-      else if (digital_button.is_held(5 * SEC)) current_mode = Mode::DigitalSelected;  
+      if (external_button.is_held(SELECTION_DELAY)) current_mode = Mode::ExternalSelected;
+      else if (analog_button.is_held(SELECTION_DELAY)) current_mode = Mode::AnalogSelected;
+      else if (wifi_button.is_held(SELECTION_DELAY)) current_mode = Mode::WifiSelected;  
+      else if (digital_button.is_held(SELECTION_DELAY)) current_mode = Mode::DigitalSelected;  
       break;
     }
     case Mode::ExternalSelected: {
@@ -183,7 +212,6 @@ void loop() {
         previous_mode = Mode::WifiSelected;
       }
       if (analog_button.just_pressed()) current_mode = Mode::StandBy;
-      else if (wifi_button.just_pressed()) current_mode = Mode::AnalogSelected;
       else if (track_button.just_pressed()) current_mode = Mode::TrackActive; 
       break;
     }  
@@ -203,21 +231,23 @@ void loop() {
       }
       if (track_button.just_pressed()) {
         deactivate_track();
-        switch (selected_source) {
-          case PowerSource::External:
-            current_mode = Mode::ExternalSelected;
-            break; 
-          case PowerSource::Analog:
-            current_mode = Mode::AnalogSelected;
-            break; 
-          case PowerSource::Digital:
-            current_mode = Mode::DigitalSelected;
-            break; 
-        }
+        current_mode = restore_previous_mode(selected_source);
+      } else if (short_circuit.is_closed()) current_mode = Mode::TrackProtected;
+      break;
+    }
+    case Mode::TrackProtected: {
+      if (previous_mode != Mode::TrackProtected) {
+        turn_off_all_relays();
+        track_led.start_cycling(SHORT_CIRCUIT_BLINK_DELAY);
+        previous_mode = Mode::TrackProtected;
+      };
+      if (! short_circuit.is_closed()) {
+        track_led.stop_cycling();
+        current_mode = restore_previous_mode(selected_source);
       }
       break;
-    }  
-  }
+    }
+  }  // switch (current_mode)
 
   delay(10);  // "Add a small debouncing delay" --@ladyada
 }
