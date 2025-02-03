@@ -1,6 +1,6 @@
 # sbf-painel
 
-Código para um painel de controle de fontes para a SBF, Associação Brasileira de Ferromodelismo.
+Código para um painel de controle de fontes projetado e construído por Ernesto S. Jr. para a maquete da SBF, Associação Brasileira de Ferromodelismo.
 
 <img src="sbf-painel-frente.jpg" alt="foto de um painel de controle com botões e LEDs conforme descrição nesta página" width="400"/>
 
