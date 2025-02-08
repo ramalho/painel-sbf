@@ -1,4 +1,3 @@
-#include <Array.h>
 #include "garoa_digital_io.h"
 #include "garoa_button.h"
 
@@ -55,42 +54,32 @@ OutputOnOff wifi_led(2, LOW);
 OutputOnOff wifi_relay(A3, LOW);
 
 const int LEN_SOURCES = 3;
-static Array<OutputOnOff*,LEN_SOURCES> source_leds;
-static Array<Button*,LEN_SOURCES> source_buttons;
+OutputOnOff* source_leds[LEN_SOURCES] = { &external_led, &analog_led, &digital_led };
+Button* source_buttons[LEN_SOURCES] = { &external_button, &analog_button, &digital_button };
 
 const int LEN_ALL_RELAYS = 5;
-static Array<OutputOnOff*,LEN_ALL_RELAYS> all_relays;
+OutputOnOff* all_relays[LEN_ALL_RELAYS] = { &track_relay, &external_relay, &analog_relay, &wifi_relay, &digital_relay };
 
 Mode current_mode = Mode::StandBy;
 Mode previous_mode = Mode::Unset;
 PowerSource selected_source = PowerSource::None;
 
-void setup() {
-  source_leds.push_back(&external_led);
-  source_leds.push_back(&analog_led);
-  source_leds.push_back(&digital_led);
-
-  source_buttons.push_back(&external_button);
-  source_buttons.push_back(&analog_button);
-  source_buttons.push_back(&digital_button);
-
-  all_relays.push_back(&track_relay);
-  all_relays.push_back(&external_relay);
-  all_relays.push_back(&analog_relay);
-  all_relays.push_back(&wifi_relay);
-  all_relays.push_back(&digital_relay);
+void turn_off_all_relays() {
+  for (int i = 0; i < LEN_ALL_RELAYS; i++) {
+    all_relays[i]->turn_off();
+  }
 }
 
-void turn_off_all_relays() {
-  for (auto *relay : all_relays) relay->turn_off();
+void setup() {
+  turn_off_all_relays();
 }
 
 void configure_standby() {
   selected_source = PowerSource::None;
   turn_off_all_relays();
-  for (auto *led : source_leds) {
-    led->turn_on();
-    led->start_cycling(STANDBY_BLINK_DELAY);
+  for (int i = 0; i < LEN_SOURCES; i++) {
+    source_leds[i]->turn_on();
+    source_leds[i]->start_cycling(STANDBY_BLINK_DELAY);
   }
   wifi_led.turn_off();
 }
@@ -98,7 +87,9 @@ void configure_standby() {
 void configure_external_selected() {
   selected_source = PowerSource::External;
   turn_off_all_relays();
-  for (auto *led : source_leds) led->stop_cycling();
+  for (int i = 0; i < LEN_SOURCES; i++) {
+    source_leds[i]->stop_cycling();
+  }
   external_led.turn_on();
   external_relay.turn_on();
 }
@@ -106,7 +97,9 @@ void configure_external_selected() {
 void configure_analog_selected() {
   selected_source = PowerSource::Analog;
   turn_off_all_relays();
-  for (auto *led : source_leds) led->stop_cycling();
+  for (int i = 0; i < LEN_SOURCES; i++) {
+    source_leds[i]->stop_cycling();
+  }
   analog_led.turn_on();
   analog_relay.turn_on();
 }
@@ -114,7 +107,9 @@ void configure_analog_selected() {
 void configure_wifi_selected() {
   selected_source = PowerSource::Wifi;
   turn_off_all_relays();
-  for (auto *led : source_leds) led->stop_cycling();
+  for (int i = 0; i < LEN_SOURCES; i++) {
+    source_leds[i]->stop_cycling();
+  }
   analog_led.turn_on();
   wifi_led.turn_on();
   wifi_relay.turn_on();
@@ -123,7 +118,9 @@ void configure_wifi_selected() {
 void configure_digital_selected() {
   selected_source = PowerSource::Digital;
   turn_off_all_relays();
-  for (auto *led : source_leds) led->stop_cycling();
+  for (int i = 0; i < LEN_SOURCES; i++) {
+    source_leds[i]->stop_cycling();
+  }
   digital_led.turn_on();
   digital_relay.turn_on();
 }
@@ -139,19 +136,27 @@ void deactivate_track() {
 }
 
 void update_controls() {
-  for (auto *led : source_leds) led->update();
+  for (int i = 0; i < LEN_SOURCES; i++) {
+    source_leds[i]->update();
+  }
   track_led.update();
-  for (auto *button : source_buttons) button->update();
+  for (int i = 0; i < LEN_SOURCES; i++) {
+    source_buttons[i]->update();
+  }
   wifi_button.update();
   track_button.update();
-  for (auto *relay : all_relays) relay->update();
+  for (int i = 0; i < LEN_ALL_RELAYS; i++) {
+    all_relays[i]->update();
+  }
 }
 
 bool panel_enabled() {
   if (main_jumper.is_closed()) return true;
   else {
     turn_off_all_relays();
-    for (auto *led : source_leds) led->turn_off();
+    for (int i = 0; i < LEN_SOURCES; i++) {
+      source_leds[i]->turn_off();
+    }
     track_led.turn_off();
     wifi_led.turn_off();
   }
