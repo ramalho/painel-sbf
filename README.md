@@ -1,12 +1,12 @@
 # sbf-painel
 
-Código para um painel de controle de fontes para a SBF, Associação Brasileira de Ferromodelismo.
+Código para um painel de controle de fontes projetado e construído por Ernesto S. Jr. para a maquete da SBF, Associação Brasileira de Ferromodelismo.
 
-<img src="sbf-painel-frente.jpg" width="400"/>
+<img src="sbf-painel-frente.jpg" alt="foto de um painel de controle com botões e LEDs conforme descrição nesta página" width="400"/>
 
 ## Diagrama de estados do painel
 
-<img src="panel-states.png" width="400"/>
+![digrama com ovais e setas representando os estados e transições descritas nesta página](panel-states.png)
 
 Nota: Além dos controles visíveis,
 o painel tem um jumper interno de manutenção que precisa estar conectado a GND para habilitar o painel.
@@ -17,7 +17,7 @@ e os botões não têm efeito.
 
 #### `standby`
 
-* `external_led`, `digital_led`, `analog_led`, piscando;
+* `external_led`, `digital_led`, `analog_led` piscando;
 * `track_led` e `wifi_led` desligados;
 * todos os relés desligados;
 * transições:
